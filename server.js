@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 // ضَع توكن البوت الخاص بك هنا
-const BOT_TOKEN = "ضع_توكن_البوت_هنا";
+const BOT_TOKEN = "8520458243:AAExo1h_0nFDp0bRSBLKbijdLIJdrk7Cz_s";
 
 app.post('/create-stars-invoice', async (req, res) => {
   try {
