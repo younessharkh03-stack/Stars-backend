@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch');
 
 const app = express();
 app.use(cors());
@@ -13,6 +12,7 @@ app.post('/create-stars-invoice', async (req, res) => {
   try {
     const { userId, title, price, description } = req.body;
 
+    // استخدام fetch المدمجة مباشرة في Node.js
     const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -21,7 +21,7 @@ app.post('/create-stars-invoice', async (req, res) => {
         description: description || "وصف المنتج",
         payload: `user_${userId}_${Date.now()}`,
         currency: "XTR", // عملة نجوم تيليجرام
-        prices: [{ label: title, amount: price }] // السعر بالنجوم
+        prices: [{ label: title, amount: price }]
       })
     });
 
