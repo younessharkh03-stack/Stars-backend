@@ -1,51 +1,39 @@
 const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
+const fetch = require('node-fetch');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// توكن البوت تبعك
-const BOT_TOKEN = "8520458243:AAExo1h_0nFDp0bRSBLKbijdLIJdrk7Cz_s"; 
+// ضَع توكن البوت الخاص بك هنا
+const BOT_TOKEN = "ضع_توكن_البوت_هنا";
 
-// 1. مسار إنشاء فاتورة النجوم
 app.post('/create-stars-invoice', async (req, res) => {
-  const { userId, stars } = req.body;
-
   try {
-    const response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
-      title: "شراء منتج تجريبي",
-      description: "طلب منتج بـ 10 نجوم داخل الـ Mini App",
-      payload: JSON.stringify({ userId, item: 'test_product' }),
-      provider_token: "", // فارغ حصراً للنجوم
-      currency: "XTR",    // رمز Telegram Stars
-      prices: [{ label: "منتج تجريبي", amount: stars || 10 }]
+    const { userId, title, price, description } = req.body;
+
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title || "منتج تجريبي",
+        description: description || "وصف المنتج",
+        payload: `user_${userId}_${Date.now()}`,
+        currency: "XTR", // عملة نجوم تيليجرام
+        prices: [{ label: title, amount: price }] // السعر بالنجوم
+      })
     });
 
-    res.json({ invoiceLink: response.data.result });
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "فشل إنشاء الفاتورة" });
+    const data = await response.json();
+    if (data.ok) {
+      res.json({ invoiceLink: data.result });
+    } else {
+      res.status(400).json({ error: data.description });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-});
-
-// 2. مسار استقبال الـ Webhook لتأكيد استلام النجوم
-app.post('/webhook', async (req, res) => {
-  const update = req.body;
-
-  if (update.pre_checkout_query) {
-    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerPreCheckoutQuery`, {
-      pre_checkout_query_id: update.pre_checkout_query.id,
-      ok: true
-    });
-  }
-
-  if (update.message?.successful_payment) {
-    console.log("تم استلام النجوم بنجاح!", update.message.successful_payment);
-  }
-
-  res.json({ ok: true });
 });
 
 const PORT = process.env.PORT || 3000;
